@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quiz do Ney</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(to bottom, #e0f7fa, #ffffff);
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+    }
+
+    .quiz-container {
+      background: #ffffff;
+      margin-top: 30px;
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
+      width: 95%;
+      max-width: 500px;
+    }
+
+    header {
+      text-align: center;
+      font-size: 18px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+    }
+
+    .info-bar {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 15px;
+      font-size: 14px;
+      color: #555;
+    }
+
+    .question-area {
+      margin-bottom: 20px;
+    }
+
+    .question-text {
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+
+    .options button {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 10px;
+      font-size: 15px;
+      background: #ecf0f1;
+      color: #2c3e50;
+      border: 2px solid transparent;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .options button.correct {
+      border-color: green;
+      background-color: #d4edda;
+    }
+
+    .options button.wrong {
+      border-color: red;
+      background-color: #f8d7da;
+    }
+
+    .control-panel {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      margin-top: 10px;
+    }
+
+    .control-panel button {
+      padding: 10px;
+      flex: 1 1 45%;
+      background-color: #3498db;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .next-button {
+      display: none;
+      margin-top: 10px;
+      text-align: center;
+    }
+
+    .next-button button {
+      padding: 10px 20px;
+      background-color: #27ae60;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 15px;
+    }
+
+    .input-name {
+      margin-bottom: 15px;
+      display: flex;
+      gap: 10px;
+    }
+
+    .input-name input {
+      flex: 1;
+      padding: 10px;
+      font-size: 14px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+  </style>
+</head>
+<body>
+  <div class="quiz-container">
+    <header>Quiz do Ney, Conhecimentos Gerais</header>
+    <div class="input-name" id="nameInputArea">
+      <input type="text" id="playerName" placeholder="Digite seu nome" />
+      <button onclick="startGame()">Iniciar</button>
+    </div>
+
+    <div class="info-bar">
+      <div id="playerInfo">Jogador: -</div>
+      <div id="scoreInfo">Acertos: 0</div>
+      <div id="progressInfo">0/0</div>
+    </div>
+
+    <div class="question-area">
+      <div class="question-text" id="questionText">Clique em iniciar para começar.</div>
+      <div class="options" id="optionsBox"></div>
+      <div class="next-button" id="nextButtonArea">
+        <button onclick="nextQuestion()">Próxima</button>
+      </div>
+    </div>
+
+    <div class="control-panel">
+      <button onclick="pauseGame()">Pausar</button>
+      <button onclick="resumeGame()">Continuar</button>
+      <button onclick="restartGame()">Reiniciar</button>
+    </div>
+  </div>
+
+  <script>
+    const questions = [
+      { question: "Qual é a capital do Brasil?", options: ["Brasília", "Rio de Janeiro", "São Paulo", "Belo Horizonte"], answer: "Brasília" },
+  { question: "Quem foi o primeiro presidente do Brasil?", options: ["Getúlio Vargas", "Deodoro da Fonseca", "Juscelino Kubitschek", "Dom Pedro II"], answer: "Deodoro da Fonseca" },
+  { question: "Em que ano o homem pisou na Lua pela primeira vez?", options: ["1969", "1959", "1979", "1989"], answer: "1969" },
+  { question: "Qual é o maior oceano do mundo?", options: ["Atlântico", "Índico", "Pacífico", "Ártico"], answer: "Pacífico" },
+  { question: "Quantos estados tem o Brasil?", options: ["25", "26", "27", "28"], answer: "26" },
+  { question: "Qual é o símbolo químico da água?", options: ["O2", "CO2", "H2O", "NaCl"], answer: "H2O" },
+  { question: "Quem escreveu 'Dom Casmurro'?", options: ["José de Alencar", "Machado de Assis", "Clarice Lispector", "Carlos Drummond"], answer: "Machado de Assis" },
+  { question: "Em que continente fica o Egito?", options: ["Ásia", "Europa", "África", "América"], answer: "África" },
+  { question: "Quem pintou o teto da Capela Sistina?", options: ["Da Vinci", "Michelangelo", "Rafael", "Donatello"], answer: "Michelangelo" },
+  { question: "O que é a fotossíntese?", options: ["Processo de digestão das plantas", "Respiração celular", "Conversão de luz em energia pelas plantas", "Evaporação da água"], answer: "Conversão de luz em energia pelas plantas" },
+  { question: "Qual planeta é conhecido como planeta vermelho?", options: ["Vênus", "Saturno", "Marte", "Júpiter"], answer: "Marte" },
+  { question: "Qual é o maior animal terrestre?", options: ["Hipopótamo", "Rinoceronte", "Girafa", "Elefante africano"], answer: "Elefante africano" },
+  { question: "Quem foi Albert Einstein?", options: ["Físico", "Pintor", "Músico", "Escritor"], answer: "Físico" },
+  { question: "Quantos lados tem um hexágono?", options: ["5", "6", "7", "8"], answer: "6" },
+  { question: "Qual país é famoso por sua Torre Eiffel?", options: ["Alemanha", "Espanha", "França", "Itália"], answer: "França" },
+  { question: "Qual é o maior rio do mundo em volume de água?", options: ["Nilo", "Yangtzé", "Amazonas", "Mississipi"], answer: "Amazonas" },
+  { question: "Quem descobriu o Brasil?", options: ["Cristóvão Colombo", "Pedro Álvares Cabral", "Vasco da Gama", "Américo Vespúcio"], answer: "Pedro Álvares Cabral" },
+  { question: "Qual é o menor país do mundo?", options: ["Mônaco", "Malta", "Vaticano", "San Marino"], answer: "Vaticano" },
+  { question: "Quantos minutos tem uma hora?", options: ["60", "100", "30", "90"], answer: "60" },
+  { question: "Quem escreveu 'O Pequeno Príncipe'?", options: ["Saint-Exupéry", "J. K. Rowling", "Hans Christian Andersen", "Monteiro Lobato"], answer: "Saint-Exupéry" },
+  { question: "O que significa a sigla ONU?", options: ["Organização Nacional Unificada", "Organização das Nações Unidas", "Operação das Nações Unidas", "Organização de Negócios Unidos"], answer: "Organização das Nações Unidas" },
+  { question: "Qual a capital do Canadá?", options: ["Toronto", "Vancouver", "Ottawa", "Montreal"], answer: "Ottawa" },
+  { question: "Qual a moeda oficial do Japão?", options: ["Iene", "Yuan", "Won", "Dólar"], answer: "Iene" },
+  { question: "Quem foi o criador da teoria da evolução?", options: ["Darwin", "Newton", "Einstein", "Aristóteles"], answer: "Darwin" },
+  { question: "Em que país está a Muralha da China?", options: ["Japão", "Coreia do Sul", "China", "Índia"], answer: "China" },
+  { question: "Qual é a capital da Argentina?", options: ["Lima", "Buenos Aires", "Montevidéu", "Santiago"], answer: "Buenos Aires" },
+  { question: "Qual é o nome do satélite natural da Terra?", options: ["Sol", "Lua", "Marte", "Estrela"], answer: "Lua" },
+  { question: "Quem foi o autor de 'Romeu e Julieta'?", options: ["Shakespeare", "Dickens", "Camões", "Poe"], answer: "Shakespeare" },
+  { question: "Qual o maior país do mundo em extensão territorial?", options: ["Canadá", "China", "Rússia", "EUA"], answer: "Rússia" },
+  { question: "Qual é o resultado de 9 x 9?", options: ["81", "72", "99", "90"], answer: "81" },
+  { question: "Quem é conhecido como 'Rei do Futebol'?", options: ["Pelé", "Maradona", "Messi", "Cristiano Ronaldo"], answer: "Pelé" },
+  { question: "Qual o elemento químico representado por O?", options: ["Ouro", "Oxigênio", "Prata", "Ozônio"], answer: "Oxigênio" },
+  { question: "Qual é o maior país da América do Sul?", options: ["Argentina", "Brasil", "Chile", "Peru"], answer: "Brasil" },
+  { question: "Em que país nasceu Mozart?", options: ["Alemanha", "Áustria", "França", "Itália"], answer: "Áustria" },
+  { question: "Qual a capital do estado de Minas Gerais?", options: ["Belo Horizonte", "Vitória", "Brasília", "Goiânia"], answer: "Belo Horizonte" },
+  { question: "Qual é a montanha mais alta do mundo?", options: ["K2", "Everest", "Kilimanjaro", "Andes"], answer: "Everest" },
+  { question: "Qual é o plural de pão?", options: ["Pões", "Pães", "Pãos", "Pãeses"], answer: "Pães" },
+  { question: "Quem é o autor de 'Memórias Póstumas de Brás Cubas'?", options: ["Machado de Assis", "José de Alencar", "Eça de Queirós", "Graciliano Ramos"], answer: "Machado de Assis" },
+  { question: "Qual é o órgão responsável por bombear o sangue?", options: ["Pulmão", "Rim", "Fígado", "Coração"], answer: "Coração" },
+  { question: "Quantos continentes existem?", options: ["5", "6", "7", "8"], answer: "7" },
+  { question: "Qual o coletivo de peixes?", options: ["Bando", "Cardume", "Rebanho", "Matilha"], answer: "Cardume" },
+  { question: "Qual a fórmula da área do quadrado?", options: ["L x L", "π x r²", "b x h", "2 x π x r"], answer: "L x L" },
+  { question: "Quem pintou 'Guernica'?", options: ["Dalí", "Picasso", "Monet", "Matisse"], answer: "Picasso" },
+  { question: "Quem foi o primeiro homem a pisar na Lua?", options: ["Buzz Aldrin", "Neil Armstrong", "Yuri Gagarin", "Alan Shepard"], answer: "Neil Armstrong" },
+  { question: "Qual o maior arquipélago do mundo?", options: ["Filipinas", "Havaí", "Indonésia", "Bahamas"], answer: "Indonésia" },
+  { question: "Qual o nome do inventor da lâmpada elétrica?", options: ["Graham Bell", "Einstein", "Thomas Edison", "Tesla"], answer: "Thomas Edison" },
+  { question: "Qual a capital da Espanha?", options: ["Barcelona", "Lisboa", "Madrid", "Sevilha"], answer: "Madrid" },
+  { question: "Em qual país fica a cidade de Istambul?", options: ["Grécia", "Turquia", "Itália", "Irã"], answer: "Turquia" },
+  { question: "Qual é a função do esqueleto humano?", options: ["Respirar", "Circular sangue", "Sustentar o corpo", "Digestão"], answer: "Sustentar o corpo" },
+    { question: "Qual é o nome do presidente do Brasil eleito em 2022?", options: ["Jair Bolsonaro", "Lula", "Fernando Haddad", "Ciro Gomes"], answer: "Lula" },
+  { question: "Qual o maior planeta do sistema solar?", options: ["Terra", "Júpiter", "Saturno", "Netuno"], answer: "Júpiter" },
+  { question: "Quantas sílabas tem a palavra 'coração'?", options: ["2", "3", "4", "5"], answer: "3" },
+  { question: "Em que país nasceu o escritor Paulo Coelho?", options: ["Portugal", "Brasil", "Argentina", "França"], answer: "Brasil" },
+  { question: "Qual o coletivo de lobos?", options: ["Alcateia", "Rebanho", "Bando", "Cardume"], answer: "Alcateia" },
+  { question: "Qual o nome do cientista que descobriu a gravidade?", options: ["Einstein", "Galileu", "Newton", "Kepler"], answer: "Newton" },
+  { question: "Quantas patas tem uma aranha?", options: ["6", "8", "10", "4"], answer: "8" },
+  { question: "Em que continente fica a Austrália?", options: ["Europa", "Oceania", "Ásia", "América"], answer: "Oceania" },
+  { question: "Qual a capital da Itália?", options: ["Roma", "Milão", "Veneza", "Nápoles"], answer: "Roma" },
+  { question: "Quem é o autor de 'Capitães da Areia'?", options: ["Machado de Assis", "Jorge Amado", "José de Alencar", "Carlos Drummond"], answer: "Jorge Amado" },
+  { question: "Quantos segundos tem 1 minuto?", options: ["30", "45", "60", "90"], answer: "60" },
+  { question: "Qual a forma geométrica da base da pirâmide?", options: ["Triângulo", "Quadrado", "Círculo", "Retângulo"], answer: "Quadrado" },
+  { question: "Quem foi o primeiro brasileiro a ganhar a Fórmula 1?", options: ["Ayrton Senna", "Nelson Piquet", "Rubinho", "Felipe Massa"], answer: "Nelson Piquet" },
+  { question: "Qual o nome da ave símbolo do Brasil?", options: ["Águia", "Coruja", "Tucano", "Arara"], answer: "Arara" },
+  { question: "Quantas cordas tem um violão?", options: ["4", "5", "6", "7"], answer: "6" },
+  { question: "Quem é o criador da Apple?", options: ["Bill Gates", "Steve Jobs", "Elon Musk", "Mark Zuckerberg"], answer: "Steve Jobs" },
+  { question: "Qual o país com maior população do mundo?", options: ["Índia", "Estados Unidos", "Brasil", "China"], answer: "China" },
+  { question: "Qual a capital do México?", options: ["Acapulco", "Monterrey", "Cidade do México", "Cancún"], answer: "Cidade do México" },
+  { question: "O que é um número primo?", options: ["Divisível por 2", "Múltiplo de 10", "Tem mais de 2 divisores", "Tem apenas dois divisores: 1 e ele mesmo"], answer: "Tem apenas dois divisores: 1 e ele mesmo" },
+  { question: "Quem é o autor de 'Grande Sertão: Veredas'?", options: ["João Cabral", "Clarice Lispector", "Guimarães Rosa", "Machado de Assis"], answer: "Guimarães Rosa" },
+  { question: "Qual o estado mais populoso do Brasil?", options: ["Minas Gerais", "Bahia", "São Paulo", "Rio de Janeiro"], answer: "São Paulo" },
+  { question: "O que é um átomo?", options: ["Partícula visível a olho nu", "Molécula de água", "Menor parte de um elemento químico", "Célula animal"], answer: "Menor parte de um elemento químico" },
+  { question: "Qual o plural de chapéu?", options: ["Chapéus", "Chapézes", "Chapéis", "Chapeis"], answer: "Chapéus" },
+  { question: "Quem foi Tiradentes?", options: ["Poeta", "Imperador", "Revolucionário", "Presidente"], answer: "Revolucionário" },
+  { question: "Qual o nome do rio que corta a cidade de Londres?", options: ["Seine", "Danúbio", "Tâmisa", "Tigre"], answer: "Tâmisa" },
+  { question: "O que significa a sigla IBGE?", options: ["Instituto Brasileiro de Geografia e Estatística", "Instituição de Bancos e Gestão Econômica", "Índice Básico de Gastos Estaduais", "Instituto de Bens e Gastos Escolares"], answer: "Instituto Brasileiro de Geografia e Estatística" },
+  { question: "Em que ano ocorreu a Proclamação da República no Brasil?", options: ["1822", "1889", "1891", "1922"], answer: "1889" },
+  { question: "Qual a função da clorofila?", options: ["Produzir oxigênio na respiração", "Dar sabor às plantas", "Colorir as flores", "Captar luz solar para fotossíntese"], answer: "Captar luz solar para fotossíntese" },
+  { question: "Quantos países fazem parte do Mercosul atualmente (2025)?", options: ["2", "3", "4", "5"], answer: "4" },
+  { question: "Qual o número do Pi com duas casas decimais?", options: ["3.12", "3.14", "3.16", "3.13"], answer: "3.14" },
+  { question: "Qual é a capital do estado do Amazonas?", options: ["Belém", "Porto Velho", "Manaus", "Boa Vista"], answer: "Manaus" },
+  { question: "Quem inventou o telefone?", options: ["Nikola Tesla", "Graham Bell", "Thomas Edison", "Albert Einstein"], answer: "Graham Bell" },
+  { question: "Qual é o principal gás responsável pelo efeito estufa?", options: ["O2", "CO2", "H2O", "CH4"], answer: "CO2" },
+  { question: "Qual foi o primeiro país a conquistar a Copa do Mundo de futebol?", options: ["Brasil", "Uruguai", "Alemanha", "Itália"], answer: "Uruguai" },
+  { question: "Qual o nome da molécula que carrega o código genético?", options: ["RNA", "DNA", "H2O", "ATP"], answer: "DNA" },
+  { question: "Quem é conhecido como o pai da aviação?", options: ["Irmãos Wright", "Santos Dumont", "Leonardo da Vinci", "Galileu"], answer: "Santos Dumont" },
+  { question: "Qual é o oceano entre a África e a Austrália?", options: ["Atlântico", "Índico", "Pacífico", "Ártico"], answer: "Índico" },
+  { question: "Quantas colinas existem em Roma?", options: ["5", "6", "7", "8"], answer: "7" },
+  { question: "Quem escreveu 'Macunaíma'?", options: ["Mário de Andrade", "Oswald de Andrade", "Monteiro Lobato", "Graciliano Ramos"], answer: "Mário de Andrade" },
+  { question: "Qual foi o primeiro elemento da tabela periódica?", options: ["Oxigênio", "Hidrogênio", "Carbono", "Nitrogênio"], answer: "Hidrogênio" },
+  { question: "Qual o maior deserto do mundo?", options: ["Saara", "Kalahari", "Gobi", "Antártida"], answer: "Antártida" },
+  { question: "O que são vertebrados?", options: ["Animais com coluna vertebral", "Animais sem cérebro", "Animais com asas", "Animais marinhos"], answer: "Animais com coluna vertebral" },
+  { question: "Qual o país com mais títulos de Copa do Mundo?", options: ["Alemanha", "Brasil", "Itália", "Argentina"], answer: "Brasil" },
+  { question: "Qual a língua oficial da Suíça?", options: ["Inglês", "Alemão", "Francês", "Várias"], answer: "Várias" },
+  { question: "Qual a capital da Alemanha?", options: ["Berlim", "Hamburgo", "Frankfurt", "Bonn"], answer: "Berlim" },
+  { question: "Quem foi a primeira mulher a ganhar um Nobel?", options: ["Marie Curie", "Madre Teresa", "Jane Austen", "Angela Merkel"], answer: "Marie Curie" },
+  { question: "Qual a fórmula da água?", options: ["H2O", "HO2", "O2H", "OH2"], answer: "H2O" },
+  { question: "Qual planeta tem os anéis mais visíveis?", options: ["Júpiter", "Saturno", "Urano", "Netuno"], answer: "Saturno" },
+  { question: "Qual a capital do Chile?", options: ["Lima", "Santiago", "Buenos Aires", "Quito"], answer: "Santiago" },
+    { question: "Quem descobriu a América?", options: ["Pedro Álvares Cabral", "Vasco da Gama", "Cristóvão Colombo", "Américo Vespúcio"], answer: "Cristóvão Colombo" },
+  { question: "Qual a moeda oficial do Reino Unido?", options: ["Euro", "Libra Esterlina", "Dólar", "Franco"], answer: "Libra Esterlina" },
+  { question: "O que é um mamífero?", options: ["Animal com penas", "Animal que bota ovos", "Animal com glândulas mamárias", "Animal aquático"], answer: "Animal com glândulas mamárias" },
+  { question: "Qual é a capital do estado da Bahia?", options: ["Salvador", "Recife", "Fortaleza", "Maceió"], answer: "Salvador" },
+  { question: "Quem escreveu 'Os Lusíadas'?", options: ["Camões", "Fernando Pessoa", "Eça de Queirós", "José Saramago"], answer: "Camões" },
+  { question: "Qual o animal símbolo da Austrália?", options: ["Coala", "Canguru", "Ornitorrinco", "Emu"], answer: "Canguru" },
+  { question: "O que é um haicai?", options: ["Poema longo", "Poema sem rima", "Poema de 3 versos", "Poema narrativo"], answer: "Poema de 3 versos" },
+  { question: "Qual é o país sede das pirâmides de Gizé?", options: ["Irã", "Egito", "Índia", "Sudão"], answer: "Egito" },
+  { question: "Quem escreveu 'A Hora da Estrela'?", options: ["Lygia Fagundes Telles", "Clarice Lispector", "Rachel de Queiroz", "Cecília Meireles"], answer: "Clarice Lispector" },
+  { question: "Quantos ossos tem o corpo humano adulto?", options: ["198", "206", "208", "210"], answer: "206" },
+  { question: "Qual o maior planeta rochoso do sistema solar?", options: ["Terra", "Marte", "Vênus", "Mercúrio"], answer: "Terra" },
+  { question: "Qual a principal função dos glóbulos vermelhos?", options: ["Lutar contra infecções", "Transportar oxigênio", "Produzir hormônios", "Coagular sangue"], answer: "Transportar oxigênio" },
+  { question: "Qual o país conhecido como 'Terra do Sol Nascente'?", options: ["China", "Coreia do Sul", "Japão", "Tailândia"], answer: "Japão" },
+  { question: "Quem escreveu '1984'?", options: ["Aldous Huxley", "George Orwell", "Ray Bradbury", "Isaac Asimov"], answer: "George Orwell" },
+  { question: "Quantos segundos tem uma hora?", options: ["3600", "600", "3000", "2400"], answer: "3600" },
+  { question: "Quem foi o criador da Microsoft?", options: ["Steve Jobs", "Bill Gates", "Elon Musk", "Jeff Bezos"], answer: "Bill Gates" },
+  { question: "Qual a unidade de medida da força?", options: ["Newton", "Watt", "Joule", "Ampere"], answer: "Newton" },
+  { question: "Qual oceano banha o litoral brasileiro?", options: ["Pacífico", "Índico", "Atlântico", "Ártico"], answer: "Atlântico" },
+  { question: "Quem escreveu 'Auto da Compadecida'?", options: ["Nelson Rodrigues", "Ariano Suassuna", "Plínio Marcos", "Dias Gomes"], answer: "Ariano Suassuna" },
+  { question: "Qual o menor osso do corpo humano?", options: ["Tíbia", "Estremocle", "Estribo", "Fêmur"], answer: "Estribo" },
+  { question: "O que é mitocôndria?", options: ["Parte do coração", "Organelo celular", "Tipo de célula", "Hormônio"], answer: "Organelo celular" },
+  { question: "Qual o nome da capital da Coreia do Sul?", options: ["Pyongyang", "Pequim", "Seul", "Tóquio"], answer: "Seul" },
+  { question: "Quem compôs o Hino Nacional Brasileiro?", options: ["Carlos Gomes", "Francisco Manuel da Silva", "Villa-Lobos", "Chiquinha Gonzaga"], answer: "Francisco Manuel da Silva" },
+  { question: "Qual a montanha mais alta das Américas?", options: ["Everest", "Aconcágua", "Andes", "Chimborazo"], answer: "Aconcágua" },
+  { question: "Qual é a camada mais externa da Terra?", options: ["Manto", "Crosta", "Núcleo", "Atmosfera"], answer: "Crosta" },
+  { question: "O que é cartografia?", options: ["Ciência dos mapas", "Ciência dos planetas", "Arte de escrever", "Técnica de jardinagem"], answer: "Ciência dos mapas" },
+  { question: "Qual foi o primeiro satélite artificial lançado no espaço?", options: ["Sputnik", "Apollo", "Explorer", "Voyager"], answer: "Sputnik" },
+  { question: "O que significa a sigla DNA?", options: ["Ácido Desoxirribonucleico", "Desoxirribose Natural Atômico", "Duplicador de Nucleotídeos Ativos", "Desenho Natural Atômico"], answer: "Ácido Desoxirribonucleico" },
+  { question: "Em que continente fica o deserto do Saara?", options: ["Ásia", "África", "América", "Europa"], answer: "África" },
+  { question: "Quem foi Zumbi dos Palmares?", options: ["Imperador", "Líder indígena", "Rei africano", "Líder do quilombo"], answer: "Líder do quilombo" },
+  { question: "O que é um eclipse solar?", options: ["Quando o Sol encobre a Lua", "Quando a Lua encobre o Sol", "Quando a Terra fica entre Sol e Lua", "Quando o Sol desaparece"], answer: "Quando a Lua encobre o Sol" },
+  { question: "Qual a função das raízes das plantas?", options: ["Respirar", "Fazer fotossíntese", "Absorver água e nutrientes", "Reproduzir"], answer: "Absorver água e nutrientes" },
+  { question: "Qual é o maior estado do Brasil em extensão?", options: ["Amazonas", "Pará", "Mato Grosso", "Bahia"], answer: "Amazonas" },
+  { question: "Quem é o autor de 'O Alienista'?", options: ["Monteiro Lobato", "Machado de Assis", "José de Alencar", "Eça de Queirós"], answer: "Machado de Assis" },
+  { question: "Qual o principal idioma falado na Bélgica?", options: ["Francês", "Holandês", "Alemão", "Todos os anteriores"], answer: "Todos os anteriores" },
+  { question: "Em que país nasceu Van Gogh?", options: ["Alemanha", "França", "Países Baixos", "Áustria"], answer: "Países Baixos" },
+  { question: "O que é o pH?", options: ["Potência de hidrogênio", "Peso de hélio", "Pressão hidroelétrica", "Ponto de fusão"], answer: "Potência de hidrogênio" },
+  { question: "Quem pintou 'A Noite Estrelada'?", options: ["Monet", "Van Gogh", "Renoir", "Manet"], answer: "Van Gogh" },
+  { question: "Qual é o nome do famoso cientista que nasceu em Pisa e estudou a gravidade?", options: ["Galileu Galilei", "Newton", "Copérnico", "Einstein"], answer: "Galileu Galilei" },
+  { question: "Quantos vértices tem um cubo?", options: ["6", "8", "10", "12"], answer: "8" },
+  { question: "Qual a capital do estado do Ceará?", options: ["Recife", "Fortaleza", "Natal", "João Pessoa"], answer: "Fortaleza" },
+  { question: "Quem compôs 'As Quatro Estações'?", options: ["Mozart", "Beethoven", "Bach", "Vivaldi"], answer: "Vivaldi" },
+  { question: "Qual a função dos pulmões?", options: ["Bombear sangue", "Filtrar urina", "Fazer a digestão", "Trocar gases com o ar"], answer: "Trocar gases com o ar" },
+  { question: "Quem é considerado o patrono da educação no Brasil?", options: ["Paulo Freire", "Anísio Teixeira", "Darcy Ribeiro", "Machado de Assis"], answer: "Paulo Freire" },
+  { question: "Quantos anos tem um século?", options: ["50", "100", "500", "1000"], answer: "100" },
+  { question: "O que é um eclipse lunar?", options: ["Quando a Lua fica atrás do Sol", "Quando a Terra se interpõe entre Sol e Lua", "Quando o Sol desaparece", "Quando a Lua se aproxima da Terra"], answer: "Quando a Terra se interpõe entre Sol e Lua" },
+  { question: "Qual foi o ano da independência do Brasil?", options: ["1822", "1889", "1500", "1815"], answer: "1822" },
+  { question: "Qual o coletivo de abelhas?", options: ["Rebanho", "Ninho", "Colmeia", "Enxame"], answer: "Enxame" },
+  { question: "Qual é o maior oceano do planeta?", options: ["Atlântico", "Índico", "Pacífico", "Ártico"], answer: "Pacífico" },
+  { question: "Quem escreveu 'Dom Casmurro'?", options: ["Machado de Assis", "José de Alencar", "Carlos Drummond", "Clarice Lispector"], answer: "Machado de Assis" },
+  { question: "Quantos continentes existem?", options: ["5", "6", "7", "8"], answer: "7" },
+  { question: "Qual é a capital do Canadá?", options: ["Toronto", "Vancouver", "Ottawa", "Montreal"], answer: "Ottawa" },
+  { question: "O que significa ONU?", options: ["Organização Nacional Unida", "Ordem das Nações Unidas", "Organização das Nações Unidas", "Organização Nuclear Universal"], answer: "Organização das Nações Unidas" },
+  { question: "Qual é o gás essencial para a respiração humana?", options: ["Oxigênio", "Hidrogênio", "Nitrogênio", "Gás carbônico"], answer: "Oxigênio" },
+  { question: "Em que país nasceu Albert Einstein?", options: ["Suíça", "Alemanha", "Áustria", "França"], answer: "Alemanha" },
+  { question: "Qual é a moeda do Japão?", options: ["Yuan", "Won", "Iene", "Dólar"], answer: "Iene" },
+  { question: "Qual é o maior animal terrestre?", options: ["Elefante", "Girafa", "Hipopótamo", "Rinoceronte"], answer: "Elefante" },
+  { question: "Em que continente está o Brasil?", options: ["América do Norte", "América Central", "América do Sul", "África"], answer: "América do Sul" },
+  { question: "Qual é a fórmula da água?", options: ["H2O", "CO2", "O2", "NaCl"], answer: "H2O" },
+  { question: "O que é cartilagem?", options: ["Tipo de osso", "Tecido muscular", "Tecido conjuntivo flexível", "Hormônio"], answer: "Tecido conjuntivo flexível" },
+  { question: "Quem pintou a Mona Lisa?", options: ["Michelangelo", "Leonardo da Vinci", "Rafael", "Donatello"], answer: "Leonardo da Vinci" },
+  { question: "Qual é a capital da Argentina?", options: ["Santiago", "Buenos Aires", "Montevidéu", "Lima"], answer: "Buenos Aires" },
+  { question: "Quem é o autor de 'Romeu e Julieta'?", options: ["Machado de Assis", "Shakespeare", "Victor Hugo", "Goethe"], answer: "Shakespeare" },
+  { question: "Qual planeta é conhecido como 'Planeta Vermelho'?", options: ["Marte", "Júpiter", "Saturno", "Mercúrio"], answer: "Marte" },
+  { question: "Qual o nome do rio que corta a cidade de Londres?", options: ["Danúbio", "Tâmisa", "Sena", "Volga"], answer: "Tâmisa" },
+  { question: "Qual o nome do maior arquipélago do mundo?", options: ["Havaí", "Maldivas", "Indonésia", "Filipinas"], answer: "Indonésia" },
+  { question: "Qual o principal gás causador do efeito estufa?", options: ["Oxigênio", "Metano", "Gás carbônico", "Hidrogênio"], answer: "Gás carbônico" },
+  { question: "Quem foi o primeiro presidente do Brasil?", options: ["Deodoro da Fonseca", "Getúlio Vargas", "Juscelino Kubitschek", "Floriano Peixoto"], answer: "Deodoro da Fonseca" },
+  { question: "Qual é a função da clorofila nas plantas?", options: ["Respirar", "Captar luz solar", "Transportar água", "Fortalecer raízes"], answer: "Captar luz solar" },
+  { question: "Quantas sílabas tem a palavra 'relâmpago'?", options: ["2", "3", "4", "5"], answer: "4" },
+  { question: "Qual é o menor país do mundo?", options: ["Mônaco", "Nauru", "Vaticano", "Malta"], answer: "Vaticano" },
+  { question: "Quem escreveu 'Grande Sertão: Veredas'?", options: ["Jorge Amado", "Guimarães Rosa", "Machado de Assis", "Carlos Drummond"], answer: "Guimarães Rosa" },
+  { question: "Qual desses países não é europeu?", options: ["França", "Itália", "Chile", "Alemanha"], answer: "Chile" },
+  { question: "O que é a biodiversidade?", options: ["Diversidade de espécies", "Poluição do ar", "Controle genético", "Ciclo da água"], answer: "Diversidade de espécies" },
+  { question: "Qual é a capital da Rússia?", options: ["São Petersburgo", "Kiev", "Moscou", "Varsóvia"], answer: "Moscou" },
+  { question: "Qual a temperatura de congelamento da água em Celsius?", options: ["0°C", "32°C", "-10°C", "100°C"], answer: "0°C" },
+  { question: "Quem foi o primeiro homem a pisar na Lua?", options: ["Yuri Gagarin", "Buzz Aldrin", "Neil Armstrong", "Michael Collins"], answer: "Neil Armstrong" },
+  { question: "Qual é o país mais populoso do mundo?", options: ["Índia", "Estados Unidos", "China", "Indonésia"], answer: "China" },
+  { question: "O que é o sistema digestivo?", options: ["Conjunto de órgãos que respiram", "Sistema hormonal", "Conjunto que processa alimentos", "Sistema imunológico"], answer: "Conjunto que processa alimentos" },
+  { question: "Qual o símbolo químico do ferro?", options: ["Fe", "Fi", "Ir", "Fr"], answer: "Fe" },
+  { question: "Qual o nome da ciência que estuda os seres vivos?", options: ["Física", "Biologia", "Química", "Matemática"], answer: "Biologia" },
+  { question: "Qual é o maior deserto do mundo?", options: ["Saara", "Atacama", "Gobi", "Antártida"], answer: "Antártida" },
+  { question: "Qual o nome do músculo responsável pela respiração?", options: ["Tronco", "Diafragma", "Estômago", "Bexiga"], answer: "Diafragma" },
+  { question: "Quem descobriu o Brasil?", options: ["Cristóvão Colombo", "Pedro Álvares Cabral", "Américo Vespúcio", "Vasco da Gama"], answer: "Pedro Álvares Cabral" },
+  { question: "Qual o nome da capital de Portugal?", options: ["Madrid", "Lisboa", "Porto", "Barcelona"], answer: "Lisboa" },
+  { question: "Qual é o maior órgão do corpo humano?", options: ["Pulmão", "Estômago", "Fígado", "Pele"], answer: "Pele" },
+  { question: "Quem foi o criador da Teoria da Relatividade?", options: ["Einstein", "Newton", "Galileu", "Kepler"], answer: "Einstein" },
+  { question: "Qual o nome do satélite natural da Terra?", options: ["Sol", "Marte", "Lua", "Júpiter"], answer: "Lua" },
+  { question: "Quantos estados tem o Brasil?", options: ["25", "26", "27", "28"], answer: "26" },
+  { question: "Qual é o maior continente do mundo?", options: ["Ásia", "África", "Europa", "América"], answer: "Ásia" },
+{ question: "Qual é a fórmula da velocidade média?", options: ["V = d / t", "V = t / d", "V = a * t", "V = m / a"], answer: "V = d / t" },
+{ question: "Quem pintou 'A Última Ceia'?", options: ["Leonardo da Vinci", "Michelangelo", "Van Gogh", "Picasso"], answer: "Leonardo da Vinci" },
+{ question: "Qual é o nome do processo de transformação de gás em líquido?", options: ["Sublimação", "Condensação", "Evaporação", "Fusão"], answer: "Condensação" },
+{ question: "Qual é o principal idioma falado na Argentina?", options: ["Português", "Espanhol", "Italiano", "Francês"], answer: "Espanhol" },
+{ question: "O que é a camada de ozônio?", options: ["Camada de gás carbônico", "Barreira contra radiação UV", "Parte da crosta terrestre", "Área de magnetismo terrestre"], answer: "Barreira contra radiação UV" },
+{ question: "Quem descobriu a penicilina?", options: ["Louis Pasteur", "Alexander Fleming", "Gregor Mendel", "Albert Sabin"], answer: "Alexander Fleming" },
+{ question: "Qual é o maior lago da América do Sul?", options: ["Lago Titicaca", "Lago Maracaibo", "Lagoa dos Patos", "Lago Baikal"], answer: "Lago Titicaca" },
+{ question: "Qual país é conhecido pelo Taj Mahal?", options: ["Paquistão", "Índia", "Irã", "Nepal"], answer: "Índia" },
+{ question: "Quantos dentes tem um adulto normalmente?", options: ["28", "30", "32", "34"], answer: "32" },
+{ question: "Qual é a capital da Colômbia?", options: ["Medellín", "Quito", "Bogotá", "Caracas"], answer: "Bogotá" },
+{ question: "Qual planeta tem o dia mais longo do sistema solar?", options: ["Vênus", "Júpiter", "Saturno", "Marte"], answer: "Vênus" },
+{ question: "Quem escreveu 'A Metamorfose'?", options: ["Franz Kafka", "Nietzsche", "George Orwell", "Italo Calvino"], answer: "Franz Kafka" },
+{ question: "Qual o nome do fenômeno em que a Lua cobre o Sol?", options: ["Eclipse lunar", "Eclipse solar", "Solstício", "Equinócio"], answer: "Eclipse solar" },
+{ question: "O que é um haicai?", options: ["Forma de dança japonesa", "Arte marcial", "Poema de 3 versos", "Estilo musical oriental"], answer: "Poema de 3 versos" },
+{ question: "Qual é o maior mamífero aquático?", options: ["Tubarão-branco", "Orca", "Baleia-azul", "Golfinho"], answer: "Baleia-azul" },
+{ question: "Em que país surgiu a democracia?", options: ["Roma", "Egito", "Grécia", "França"], answer: "Grécia" },
+{ question: "Quantos graus tem um ângulo reto?", options: ["45", "90", "180", "360"], answer: "90" },
+{ question: "Qual é a capital da Noruega?", options: ["Oslo", "Estocolmo", "Copenhague", "Helsinque"], answer: "Oslo" },
+{ question: "Quem é o deus do trovão na mitologia nórdica?", options: ["Thor", "Zeus", "Odin", "Hércules"], answer: "Thor" },
+{ question: "Qual o nome da vitamina produzida com a exposição ao sol?", options: ["Vitamina A", "Vitamina C", "Vitamina D", "Vitamina K"], answer: "Vitamina D" },
+{ question: "Quantos lados tem um octógono?", options: ["6", "7", "8", "9"], answer: "8" },
+{ question: "Qual animal é símbolo da sabedoria?", options: ["Coruja", "Leão", "Elefante", "Gato"], answer: "Coruja" },
+{ question: "Quem foi o criador da lâmpada elétrica incandescente?", options: ["Einstein", "Edison", "Tesla", "Graham Bell"], answer: "Edison" },
+{ question: "Qual é o país mais novo do mundo?", options: ["Kosovo", "Timor-Leste", "Sudão do Sul", "Montenegro"], answer: "Sudão do Sul" },
+{ question: "O que mede um barômetro?", options: ["Temperatura", "Pressão atmosférica", "Umidade", "Velocidade do vento"], answer: "Pressão atmosférica" },
+{ question: "Em que continente fica a Islândia?", options: ["África", "Europa", "Ásia", "América"], answer: "Europa" },
+{ question: "Quem escreveu 'Os Miseráveis'?", options: ["Victor Hugo", "Dostoievski", "Camus", "Voltaire"], answer: "Victor Hugo" },
+{ question: "O que significa a palavra 'fóssil'?", options: ["Animal vivo", "Resto preservado de organismo", "Rochas novas", "Fogo antigo"], answer: "Resto preservado de organismo" },
+{ question: "Qual é a montanha mais alta da África?", options: ["Monte Atlas", "Kilimanjaro", "Everest", "Andes"], answer: "Kilimanjaro" },
+{ question: "Qual é a unidade de medida usada para a frequência?", options: ["Hertz", "Ohm", "Watt", "Volt"], answer: "Hertz" },
+{ question: "Qual é o maior arquipélago da Europa?", options: ["Açores", "Baleares", "Ilhas Britânicas", "Canárias"], answer: "Ilhas Britânicas" },
+{ question: "O que é a energia cinética?", options: ["Energia potencial", "Energia do movimento", "Energia elétrica", "Energia térmica"], answer: "Energia do movimento" },
+{ question: "Qual é o menor osso do corpo humano?", options: ["Fêmur", "Estribo", "Rádio", "Tíbia"], answer: "Estribo" },
+{ question: "Qual é a moeda oficial da Suíça?", options: ["Euro", "Franco suíço", "Libra", "Coroa"], answer: "Franco suíço" },
+{ question: "Quem escreveu 'O Cortiço'?", options: ["Machado de Assis", "Aluísio Azevedo", "Lima Barreto", "Carlos Drummond"], answer: "Aluísio Azevedo" },
+{ question: "Qual é o maior deserto quente do mundo?", options: ["Gobi", "Antártida", "Saara", "Atacama"], answer: "Saara" },
+{ question: "Qual foi o primeiro metal usado pelo homem?", options: ["Ferro", "Bronze", "Cobre", "Ouro"], answer: "Cobre" },
+{ question: "Quantos planetas existem no sistema solar atualmente?", options: ["7", "8", "9", "10"], answer: "8" },
+{ question: "Qual é o nome do rio mais extenso do mundo?", options: ["Amazonas", "Yangtzé", "Mississipi", "Nilo"], answer: "Nilo" },
+{ question: "Qual é o maior felino do mundo?", options: ["Leão", "Tigre", "Leopardo", "Guepardo"], answer: "Tigre" },
+{ question: "Qual foi a primeira civilização a desenvolver a escrita?", options: ["Egípcios", "Fenícios", "Sumérios", "Gregos"], answer: "Sumérios" },
+{ question: "Qual é o órgão do corpo responsável pela produção de insulina?", options: ["Fígado", "Baço", "Pâncreas", "Rim"], answer: "Pâncreas" },
+{ question: "O que significa a sigla USB?", options: ["Unidade de Sistema Básico", "Universal Serial Bus", "Unidade Serial Binária", "User System Box"], answer: "Universal Serial Bus" },
+{ question: "Qual é a capital da Austrália?", options: ["Sydney", "Melbourne", "Canberra", "Brisbane"], answer: "Canberra" },
+{ question: "Quem descobriu a estrutura do DNA?", options: ["Einstein e Newton", "Watson e Crick", "Curie e Bohr", "Tesla e Volta"], answer: "Watson e Crick" },
+{ question: "O que é um tsunami?", options: ["Tempestade de areia", "Terremoto em terra", "Maremoto", "Chuva forte"], answer: "Maremoto" },
+{ question: "Qual a velocidade da luz no vácuo?", options: ["150 mil km/s", "300 mil km/s", "1 milhão km/s", "100 mil km/s"], answer: "300 mil km/s" },
+{ question: "Qual o nome da teoria que explica a origem do universo?", options: ["Teoria do Caos", "Teoria da Criação", "Big Bang", "Evolução cósmica"], answer: "Big Bang" },
+{ question: "Qual é o principal rio que corta o Egito?", options: ["Nilo", "Tigre", "Eufrates", "Amazonas"], answer: "Nilo" },
+{ question: "Em que ano começou a Segunda Guerra Mundial?", options: ["1914", "1939", "1945", "1929"], answer: "1939" },
+{ question: "Qual é o nome do satélite artificial lançado pela União Soviética em 1957?", options: ["Explorer", "Apollo", "Sputnik", "Soyuz"], answer: "Sputnik" },
+{ question: "Qual é a capital da Suécia?", options: ["Oslo", "Copenhague", "Estocolmo", "Helsinque"], answer: "Estocolmo" },
+{ question: "Quem é o autor de 'A Revolução dos Bichos'?", options: ["George Orwell", "Aldous Huxley", "Ray Bradbury", "J. D. Salinger"], answer: "George Orwell" },
+{ question: "Qual animal é conhecido por mudar de cor para se camuflar?", options: ["Polvo", "Camaleão", "Lagarto", "Tubarão"], answer: "Camaleão" },
+{ question: "O que significa a sigla WWW?", options: ["World Web Window", "Wide Web World", "World Wide Web", "Web World Wide"], answer: "World Wide Web" },
+{ question: "Qual é o maior país do Oriente Médio em território?", options: ["Irã", "Iraque", "Arábia Saudita", "Israel"], answer: "Arábia Saudita" },
+{ question: "Quem pintou 'O Grito'?", options: ["Munch", "Monet", "Manet", "Van Gogh"], answer: "Munch" },
+{ question: "Qual o nome do cientista que criou a vacina contra a raiva?", options: ["Pasteur", "Sabin", "Fleming", "Darwin"], answer: "Pasteur" },
+{ question: "O que é um anagrama?", options: ["Um tipo de planta", "Palavra formada por letras de outra", "Doença genética", "Símbolo matemático"], answer: "Palavra formada por letras de outra" },
+{ question: "Qual o número atômico do carbono?", options: ["6", "8", "12", "14"], answer: "6" },
+{ question: "Qual país é conhecido pela Torre de Pisa?", options: ["França", "Espanha", "Itália", "Suíça"], answer: "Itália" },
+{ question: "Qual é o símbolo químico do ouro?", options: ["Go", "Or", "Au", "Ag"], answer: "Au" },
+{ question: "Quem foi a primeira pessoa a ir ao espaço?", options: ["Neil Armstrong", "Buzz Aldrin", "Yuri Gagarin", "Alan Shepard"], answer: "Yuri Gagarin" },
+{ question: "Em que estado brasileiro fica o Pantanal?", options: ["Amazonas", "Mato Grosso do Sul", "Bahia", "Pará"], answer: "Mato Grosso do Sul" },
+{ question: "Qual é o nome do processo de conversão de água em vapor?", options: ["Evaporação", "Fusão", "Condensação", "Sublimação"], answer: "Evaporação" },
+{ question: "Qual é o nome do autor de 'A Divina Comédia'?", options: ["Virgílio", "Dante Alighieri", "Boccaccio", "Petrarca"], answer: "Dante Alighieri" },
+{ question: "O que é um eclipse lunar?", options: ["Lua tapa o Sol", "Terra entre Sol e Lua", "Sol entre Lua e Terra", "Terra desaparece"], answer: "Terra entre Sol e Lua" },
+{ question: "Qual é o nome do famoso detetive criado por Arthur Conan Doyle?", options: ["Poirot", "Sherlock Holmes", "Dupin", "Maigret"], answer: "Sherlock Holmes" },
+{ question: "Qual é a capital da Finlândia?", options: ["Estocolmo", "Oslo", "Helsinque", "Reykjavik"], answer: "Helsinque" },
+{ question: "Qual é o nome do satélite natural de Marte?", options: ["Lua", "Fobos", "Titã", "Ganimedes"], answer: "Fobos" },
+{ question: "Qual foi o primeiro país a usar papel-moeda?", options: ["China", "Egito", "Grécia", "Índia"], answer: "China" },
+{ question: "O que mede a escala Richter?", options: ["Temperatura", "Ventos", "Terremotos", "Radiação"], answer: "Terremotos" },
+{ question: "Qual é o nome do famoso museu em Paris que abriga a Mona Lisa?", options: ["Orsay", "Louvre", "Vaticano", "British Museum"], answer: "Louvre" },
+{ question: "Quem descobriu a América?", options: ["Cabral", "Colombo", "Vespúcio", "Cortés"], answer: "Colombo" },
+{ question: "O que é hemoglobina?", options: ["Hormônio", "Proteína do sangue", "Enzima digestiva", "Célula da pele"], answer: "Proteína do sangue" },
+{ question: "Qual é a capital da Escócia?", options: ["Cardiff", "Glasgow", "Edimburgo", "Dublin"], answer: "Edimburgo" },
+{ question: "Quem é o autor de 'O Velho e o Mar'?", options: ["Hemingway", "Fitzgerald", "Faulkner", "Steinbeck"], answer: "Hemingway" },
+{ question: "Qual é a moeda da Rússia?", options: ["Rublo", "Euro", "Zloty", "Franco"], answer: "Rublo" },
+{ question: "Qual o nome do músculo que separa o tórax do abdômen?", options: ["Trapezoide", "Diafragma", "Esterno", "Esôfago"], answer: "Diafragma" },
+{ question: "O que significa a palavra 'ecologia'?", options: ["Estudo da Terra", "Estudo dos oceanos", "Estudo dos seres vivos e ambiente", "Estudo dos vulcões"], answer: "Estudo dos seres vivos e ambiente" },
+{ question: "Quem escreveu 'Hamlet'?", options: ["Shakespeare", "Goethe", "Kafka", "Homero"], answer: "Shakespeare" },
+{ question: "Qual é o nome da estrela mais próxima da Terra?", options: ["Sirius", "Alfa Centauri", "Betelgeuse", "Sol"], answer: "Sol" },
+{ question: "Qual é o menor continente do mundo?", options: ["Europa", "Oceania", "Antártida", "África"], answer: "Oceania" },
+{ question: "Quem foi o criador da teoria da gravidade?", options: ["Newton", "Einstein", "Galileu", "Hawking"], answer: "Newton" },
+{ question: "Em que estado brasileiro fica a Chapada Diamantina?", options: ["Bahia", "Goiás", "Mato Grosso", "Paraná"], answer: "Bahia" },
+{ question: "Qual é o nome da galáxia onde está o sistema solar?", options: ["Andrômeda", "Via Láctea", "Órion", "Cinturão de Kuiper"], answer: "Via Láctea" },
+{ question: "O que é antropologia?", options: ["Estudo da escrita", "Estudo dos deuses", "Estudo do ser humano", "Estudo das plantas"], answer: "Estudo do ser humano" },
+{ question: "Quem compôs a 9ª Sinfonia?", options: ["Mozart", "Bach", "Beethoven", "Vivaldi"], answer: "Beethoven" },
+{ question: "Qual país tem a maior quantidade de vulcões ativos?", options: ["Brasil", "Filipinas", "Estados Unidos", "Indonésia"], answer: "Indonésia" },
+{ question: "Quem foi Cleópatra?", options: ["Rainha da Grécia", "Imperatriz romana", "Rainha do Egito", "Deusa grega"], answer: "Rainha do Egito" },
+{ question: "O que é a tabela periódica?", options: ["Tabela de esportes", "Organização dos elementos químicos", "Lista de presidentes", "Lista de descobertas"], answer: "Organização dos elementos químicos" },
+{ question: "Qual é o ponto mais profundo dos oceanos?", options: ["Fossa das Marianas", "Trincheira de Java", "Fossa de Porto Rico", "Fossa de Tonga"], answer: "Fossa das Marianas" },
+{ question: "Quem foi Nelson Mandela?", options: ["Presidente dos EUA", "Ativista sul-africano", "Líder asiático", "Rei africano"], answer: "Ativista sul-africano" },
+{ question: "Quantos planetas são gasosos no sistema solar?", options: ["2", "3", "4", "5"], answer: "4" },
+{ question: "Qual o nome do instrumento usado para medir temperatura?", options: ["Barômetro", "Termômetro", "Altímetro", "Higrômetro"], answer: "Termômetro" },
+{ question: "Quem escreveu 'A Ilíada' e 'A Odisseia'?", options: ["Sófocles", "Platão", "Homero", "Aristóteles"], answer: "Homero" },
+{ question: "Qual é a capital da Dinamarca?", options: ["Copenhague", "Oslo", "Estocolmo", "Helsinque"], answer: "Copenhague" },
+{ question: "Quem foi o primeiro imperador do Brasil?", options: ["Dom Pedro I", "Dom Pedro II", "Tiradentes", "Getúlio Vargas"], answer: "Dom Pedro I" },
+{ question: "O que significa a sigla GPS?", options: ["Global Positioning System", "Geographic Protection System", "Geo Processing Signal", "Global Private Signal"], answer: "Global Positioning System" },
+{ question: "Qual é o nome do maior satélite de Júpiter?", options: ["Europa", "Calisto", "Io", "Ganimedes"], answer: "Ganimedes" },
+{ question: "Quem é o autor de 'Ensaio sobre a Cegueira'?", options: ["José Saramago", "Fernando Pessoa", "Clarice Lispector", "Machado de Assis"], answer: "José Saramago" },
+{ question: "Qual país é conhecido pelo samba e pelo futebol?", options: ["Argentina", "México", "Brasil", "Espanha"], answer: "Brasil" },
+{ question: "Quantos oceanos existem na Terra?", options: ["3", "4", "5", "6"], answer: "5" },
+{ question: "Quem criou o personagem 'Sherlock Holmes'?", options: ["Agatha Christie", "Arthur Conan Doyle", "J. K. Rowling", "Stephen King"], answer: "Arthur Conan Doyle" },
+{ question: "Qual é a capital do Peru?", options: ["Quito", "Lima", "La Paz", "Bogotá"], answer: "Lima" },
+{ question: "Qual é o nome da parte do olho que controla a entrada de luz?", options: ["Íris", "Córnea", "Pupila", "Cristalino"], answer: "Íris" },
+{ question: "Quem foi o responsável pela teoria heliocêntrica?", options: ["Ptolomeu", "Galileu", "Copérnico", "Newton"], answer: "Copérnico" },
+{ question: "Qual país é conhecido pelo Monte Fuji?", options: ["China", "Coreia do Sul", "Japão", "Tailândia"], answer: "Japão" },
+{ question: "Qual o nome do livro sagrado do islamismo?", options: ["Bíblia", "Torá", "Alcorão", "Bhagavad Gita"], answer: "Alcorão" },
+{ question: "Qual é o nome da ciência que estuda o solo?", options: ["Geologia", "Pedologia", "Meteorologia", "Botânica"], answer: "Pedologia" },
+{ question: "O que significa biodiversidade?", options: ["Diversidade de paisagens", "Diversidade de espécies", "Diversidade climática", "Diversidade de solos"], answer: "Diversidade de espécies" },
+{ question: "Qual é a função dos rins?", options: ["Digestionar", "Filtrar o sangue", "Transportar oxigênio", "Produzir insulina"], answer: "Filtrar o sangue" },
+{ question: "Quantas cordas tem um violino?", options: ["4", "5", "6", "7"], answer: "4" },
+{ question: "Quem pintou o teto da Capela Sistina?", options: ["Leonardo da Vinci", "Michelangelo", "Rafael", "Botticelli"], answer: "Michelangelo" },
+{ question: "Qual é a maior floresta tropical do mundo?", options: ["Mata Atlântica", "Floresta Amazônica", "Floresta do Congo", "Taiga"], answer: "Floresta Amazônica" },
+{ question: "Qual é a capital da Grécia?", options: ["Roma", "Atenas", "Istambul", "Lisboa"], answer: "Atenas" },
+{ question: "Qual é a função da medula óssea?", options: ["Produzir glóbulos vermelhos", "Controlar os músculos", "Regular o coração", "Produzir bile"], answer: "Produzir glóbulos vermelhos" },
+{ question: "Qual é o maior osso do corpo humano?", options: ["Fêmur", "Tíbia", "Úmero", "Rádio"], answer: "Fêmur" },
+{ question: "Quem descobriu a circulação sanguínea?", options: ["Harvey", "Pasteur", "Fleming", "Virchow"], answer: "Harvey" },
+{ question: "Qual é o país dos Czares?", options: ["Alemanha", "Rússia", "França", "Grécia"], answer: "Rússia" },
+{ question: "Qual a capital da República Tcheca?", options: ["Bratislava", "Praga", "Varsóvia", "Bucareste"], answer: "Praga" },
+{ question: "O que é um anfíbio?", options: ["Animal que vive só na água", "Animal terrestre", "Animal que vive na terra e na água", "Animal voador"], answer: "Animal que vive na terra e na água" },
+{ question: "Qual é o nome do primeiro homem no espaço?", options: ["Neil Armstrong", "Alan Shepard", "Buzz Aldrin", "Yuri Gagarin"], answer: "Yuri Gagarin" },
+{ question: "Qual é a camada da Terra onde ocorrem os terremotos?", options: ["Núcleo", "Crosta", "Atmosfera", "Manto"], answer: "Crosta" },
+{ question: "Qual é o gás mais abundante na atmosfera?", options: ["Oxigênio", "Gás carbônico", "Hidrogênio", "Nitrogênio"], answer: "Nitrogênio" },
+{ question: "Qual é a função dos leucócitos?", options: ["Carregar oxigênio", "Coagular sangue", "Defender o corpo", "Produzir hormônios"], answer: "Defender o corpo" },
+{ question: "Qual é o nome da guerra entre gregos e troianos?", options: ["Guerra do Peloponeso", "Guerra de Tróia", "Guerras Púnicas", "Guerras Médicas"], answer: "Guerra de Tróia" },
+{ question: "Qual a capital do Uruguai?", options: ["Assunção", "Montevidéu", "Buenos Aires", "Lima"], answer: "Montevidéu" },
+{ question: "Quem foi Charles Darwin?", options: ["Físico", "Astrônomo", "Biólogo", "Químico"], answer: "Biólogo" },
+{ question: "Quantas cores tem o arco-íris?", options: ["5", "6", "7", "8"], answer: "7" },
+{ question: "Qual país aboliu a escravidão em 1888?", options: ["Estados Unidos", "França", "Brasil", "Cuba"], answer: "Brasil" },
+{ question: "Qual a moeda oficial da China?", options: ["Iene", "Yuan", "Dólar", "Won"], answer: "Yuan" },
+{ question: "Qual é a principal função do fígado?", options: ["Bombear sangue", "Filtrar toxinas", "Produzir glóbulos", "Regular a temperatura"], answer: "Filtrar toxinas" },
+{ question: "O que é um eclipse?", options: ["Alinhamento entre astros", "Tempestade solar", "Explosão estelar", "Queda de meteorito"], answer: "Alinhamento entre astros" },
+{ question: "Quem pintou 'A Liberdade Guiando o Povo'?", options: ["Goya", "Delacroix", "Manet", "Monet"], answer: "Delacroix" },
+{ question: "Qual é o maior arquipélago do Brasil?", options: ["Fernando de Noronha", "Ilha Grande", "Marajó", "Abrolhos"], answer: "Marajó" },
+{ question: "Quem foi o primeiro papa latino-americano?", options: ["João Paulo I", "Bento XVI", "Francisco", "Leão XIII"], answer: "Francisco" },
+{ question: "Quantas letras tem o alfabeto português?", options: ["23", "25", "26", "28"], answer: "26" },
+{ question: "Quem foi Van Gogh?", options: ["Poeta", "Pintor", "Cientista", "Compositor"], answer: "Pintor" },
+{ question: "Qual é a capital do estado do Pará?", options: ["Belém", "Manaus", "Macapá", "São Luís"], answer: "Belém" },
+{ question: "O que significa 'fotossíntese'?", options: ["Processo de digestão", "Produção de energia pelas plantas", "Respiração celular", "Evaporação da água"], answer: "Produção de energia pelas plantas" },
+{ question: "Qual foi a primeira Constituição do Brasil?", options: ["1824", "1889", "1891", "1946"], answer: "1824" },
+{ question: "Qual o nome do satélite de Saturno com oceano subterrâneo?", options: ["Titã", "Encélado", "Europa", "Fobos"], answer: "Encélado" },
+{ question: "Qual o nome da linha imaginária que divide o planeta em dois hemisférios?", options: ["Trópico de Capricórnio", "Linha Internacional de Data", "Equador", "Meridiano de Greenwich"], answer: "Equador" },
+{ question: "Qual o nome do fenômeno que aquece as águas do oceano Pacífico?", options: ["La Niña", "El Niño", "Furacão", "Corrente de Humboldt"], answer: "El Niño" },
+{ question: "Qual a moeda oficial da África do Sul?", options: ["Rupia", "Rand", "Dirham", "Dinar"], answer: "Rand" },
+{ question: "O que é o Sistema Solar?", options: ["Conjunto de estrelas", "Conjunto de planetas ao redor do Sol", "Grupo de galáxias", "Planetas fora da Via Láctea"], answer: "Conjunto de planetas ao redor do Sol" },
+{ question: "Quem é o autor de 'O Hobbit'?", options: ["J. K. Rowling", "J. R. R. Tolkien", "George R. R. Martin", "C. S. Lewis"], answer: "J. R. R. Tolkien" },
+{ question: "Qual é a capital da Venezuela?", options: ["Bogotá", "Caracas", "Quito", "Lima"], answer: "Caracas" },
+{ question: "O que significa a sigla FIFA?", options: ["Federação Internacional de Futebol Amador", "Federação Internacional de Futebol e Atletismo", "Federação Internacional de Futebol Associado", "Federação Internacional de Futebol e Artes"], answer: "Federação Internacional de Futebol Associado" },
+{ question: "Quem foi o criador da linguagem de programação Python?", options: ["Bill Gates", "Dennis Ritchie", "Guido van Rossum", "Linus Torvalds"], answer: "Guido van Rossum" },
+{ question: "Qual o nome da pintura famosa de Da Vinci que retrata uma mulher com um leve sorriso?", options: ["A Noite Estrelada", "O Grito", "Mona Lisa", "As Meninas"], answer: "Mona Lisa" },
+{ question: "Qual o nome da molécula responsável pela fotossíntese?", options: ["Oxigênio", "Clorofila", "Glicose", "Água"], answer: "Clorofila" },
+{ question: "Qual é o menor continente em área?", options: ["Antártida", "Europa", "Oceania", "América do Sul"], answer: "Oceania" },
+{ question: "Quem escreveu 'Vidas Secas'?", options: ["Jorge Amado", "Machado de Assis", "Graciliano Ramos", "Guimarães Rosa"], answer: "Graciliano Ramos" },
+{ question: "Qual é o metal líquido à temperatura ambiente?", options: ["Ferro", "Mercúrio", "Chumbo", "Zinco"], answer: "Mercúrio" },
+{ question: "Qual é a capital da Irlanda?", options: ["Glasgow", "Belfast", "Cardiff", "Dublin"], answer: "Dublin" },
+{ question: "Qual país tem formato aproximado de uma bota?", options: ["Portugal", "Espanha", "Itália", "Grécia"], answer: "Itália" },
+{ question: "Qual é o nome do processo de separação de misturas por evaporação e condensação?", options: ["Decantação", "Filtração", "Destilação", "Sublimação"], answer: "Destilação" },
+{ question: "Quem foi o autor da frase 'Penso, logo existo'?", options: ["Sócrates", "Descartes", "Kant", "Platão"], answer: "Descartes" },
+{ question: "Qual é o maior arquipélago da Ásia?", options: ["Filipinas", "Indonésia", "Malásia", "Japão"], answer: "Indonésia" },
+{ question: "Qual a função das mitocôndrias?", options: ["Armazenar água", "Fazer fotossíntese", "Produzir energia", "Controlar o núcleo"], answer: "Produzir energia" },
+{ question: "Em que continente fica o deserto de Gobi?", options: ["África", "Ásia", "América", "Europa"], answer: "Ásia" },
+{ question: "Qual é o símbolo químico da prata?", options: ["Ag", "Au", "Sr", "Pr"], answer: "Ag" },
+{ question: "Quem foi o último imperador do Brasil?", options: ["Dom Pedro I", "Dom Pedro II", "Marechal Deodoro", "Dom João VI"], answer: "Dom Pedro II" },
+{ question: "Qual é o nome do instrumento usado para medir pressão arterial?", options: ["Termômetro", "Esfigmomanômetro", "Oxímetro", "Altímetro"], answer: "Esfigmomanômetro" },
+{ question: "Qual o país sede da ONU?", options: ["Suíça", "França", "Estados Unidos", "Reino Unido"], answer: "Estados Unidos" },
+{ question: "O que significa 'continente' em geografia?", options: ["País grande", "Oceano profundo", "Grande massa de terra", "Cidade histórica"], answer: "Grande massa de terra" },
+{ question: "Quem foi Sócrates?", options: ["Escritor", "Filósofo grego", "Imperador romano", "Rei egípcio"], answer: "Filósofo grego" },
+{ question: "Quantos metros tem uma maratona?", options: ["5.000", "10.000", "21.097", "42.195"], answer: "42.195" },
+{ question: "Qual planeta tem o maior número de luas?", options: ["Marte", "Júpiter", "Saturno", "Urano"], answer: "Saturno" },
+{ question: "Qual é a capital da Croácia?", options: ["Belgrado", "Zagreb", "Ljubljana", "Sarajevo"], answer: "Zagreb" },
+{ question: "Qual oceano banha a costa leste dos EUA?", options: ["Pacífico", "Atlântico", "Índico", "Ártico"], answer: "Atlântico" },
+{ question: "Quem escreveu 'Memórias de um Sargento de Milícias'?", options: ["Aluísio Azevedo", "Manuel Antônio de Almeida", "Machado de Assis", "José de Alencar"], answer: "Manuel Antônio de Almeida" },
+{ question: "Qual é o nome da ciência que estuda os seres vivos do mar?", options: ["Astronomia", "Zoologia", "Oceanografia", "Botânica"], answer: "Oceanografia" },
+{ question: "O que significa a sigla ONU?", options: ["Organização das Nações Unidas", "Ordem Nacional Universal", "Observatório Nacional Unido", "Organização Nuclear Universal"], answer: "Organização das Nações Unidas" },
+{ question: "Qual é o país mais rico do mundo em PIB nominal?", options: ["China", "Alemanha", "Estados Unidos", "Japão"], answer: "Estados Unidos" },
+{ question: "Quem foi Marie Curie?", options: ["Matemática", "Física e química", "Filósofa", "Astrônoma"], answer: "Física e química" },
+{ question: "Qual foi a cidade destruída pela erupção do vulcão Vesúvio?", options: ["Roma", "Atenas", "Pompéia", "Cartago"], answer: "Pompéia" },
+{ question: "O que é 'tectônica de placas'?", options: ["Movimento dos rios", "Mudança do clima", "Movimento da crosta terrestre", "Ciclo da água"], answer: "Movimento da crosta terrestre" },
+{ question: "Qual o nome do país cuja capital é Luanda?", options: ["Moçambique", "Angola", "Cabo Verde", "Guiné-Bissau"], answer: "Angola" },
+{ question: "Qual é a principal fonte de energia do corpo humano?", options: ["Proteína", "Gordura", "Vitaminas", "Glicose"], answer: "Glicose" },
+{ question: "Quantos planetas existem no sistema solar?", options: ["7", "8", "9", "10"], answer: "8" },
+{ question: "Qual o nome da pintura de Da Vinci que retrata Jesus com os apóstolos?", options: ["A Anunciação", "A Última Ceia", "A Criação de Adão", "O Julgamento Final"], answer: "A Última Ceia" },
+{ question: "Quem escreveu 'O Nome da Rosa'?", options: ["José Saramago", "Gabriel García Márquez", "Umberto Eco", "Mario Vargas Llosa"], answer: "Umberto Eco" },
+{ question: "O que significa 'inércia' na física?", options: ["Ação contínua", "Tendência de mudar de estado", "Resistência à mudança de movimento", "Aumento da aceleração"], answer: "Resistência à mudança de movimento" },
+{ question: "Qual é a montanha mais alta da América do Norte?", options: ["Aconcágua", "Everest", "Denali", "Mont Blanc"], answer: "Denali" },
+{ question: "Qual o símbolo químico do cálcio?", options: ["Ca", "Cl", "Co", "Cu"], answer: "Ca" },
+{ question: "Qual é o nome do satélite natural da Terra?", options: ["Sol", "Lua", "Marte", "Titã"], answer: "Lua" },
+{ question: "Quem foi Beethoven?", options: ["Cientista", "Pintor", "Compositor", "Filósofo"], answer: "Compositor" },
+{ question: "O que é um vírus?", options: ["Bactéria", "Célula viva", "Agente infeccioso", "Fungo"], answer: "Agente infeccioso" },
+{ question: "Qual é a unidade de medida da resistência elétrica?", options: ["Watt", "Ohm", "Volt", "Ampere"], answer: "Ohm" },
+{ question: "Qual o país com mais ilhas no mundo?", options: ["Noruega", "Filipinas", "Indonésia", "Suécia"], answer: "Suécia" },
+{ question: "Qual o nome do tratado que encerrou a Primeira Guerra Mundial?", options: ["Tratado de Tordesilhas", "Tratado de Paris", "Tratado de Versalhes", "Tratado de Viena"], answer: "Tratado de Versalhes" },
+{ question: "Quem pintou 'A Persistência da Memória'?", options: ["Dalí", "Picasso", "Miró", "Monet"], answer: "Dalí" },{ question: "Qual o maior país da África em território?", options: ["Nigéria", "África do Sul", "Argélia", "Egito"], answer: "Argélia" },
+{ question: "O que é um meteoro?", options: ["Estrela cadente", "Cometa", "Fragmento que entra na atmosfera", "Buraco negro pequeno"], answer: "Fragmento que entra na atmosfera" },
+{ question: "Quem foi Pablo Picasso?", options: ["Cientista espanhol", "Pintor espanhol", "Filósofo italiano", "Escritor francês"], answer: "Pintor espanhol" },
+{ question: "Qual é o coletivo de lobos?", options: ["Manada", "Alcateia", "Bando", "Matilha"], answer: "Alcateia" },
+{ question: "Qual é o nome da estrela mais brilhante do céu noturno?", options: ["Vênus", "Sirius", "Betelgeuse", "Polaris"], answer: "Sirius" },
+{ question: "Quem descobriu a lei da gravitação universal?", options: ["Kepler", "Galileu", "Einstein", "Newton"], answer: "Newton" },
+{ question: "Qual país é conhecido por suas tulipas e moinhos?", options: ["Bélgica", "Países Baixos", "Alemanha", "Dinamarca"], answer: "Países Baixos" },
+{ question: "O que é um aqueduto?", options: ["Canal de água", "Templo romano", "Sistema de esgoto", "Túnel subterrâneo"], answer: "Canal de água" },
+{ question: "Qual é a capital da Bolívia reconhecida constitucionalmente?", options: ["La Paz", "Cochabamba", "Sucre", "Santa Cruz"], answer: "Sucre" },
+{ question: "Qual o nome da camada gasosa que envolve a Terra?", options: ["Litosfera", "Atmosfera", "Hidrosfera", "Troposfera"], answer: "Atmosfera" },
+{ question: "Quem é o autor de 'Dom Quixote'?", options: ["Fernando Pessoa", "Miguel de Cervantes", "Camões", "Victor Hugo"], answer: "Miguel de Cervantes" },
+{ question: "O que é a crosta terrestre?", options: ["Centro da Terra", "Superfície sólida da Terra", "Camada líquida interna", "Atmosfera"], answer: "Superfície sólida da Terra" },
+{ question: "Qual é o maior país da Europa?", options: ["França", "Alemanha", "Ucrânia", "Rússia"], answer: "Rússia" },
+{ question: "Qual a capital da Coreia do Norte?", options: ["Pequim", "Seul", "Pyongyang", "Hanoi"], answer: "Pyongyang" },
+{ question: "Quem foi o criador do personagem 'Harry Potter'?", options: ["J. R. R. Tolkien", "C. S. Lewis", "Rick Riordan", "J. K. Rowling"], answer: "J. K. Rowling" },
+{ question: "Qual é a maior cordilheira do mundo?", options: ["Andes", "Alpes", "Himalaia", "Montes Urais"], answer: "Andes" },
+{ question: "Qual é o nome do maior porto do Brasil?", options: ["Porto de Santos", "Porto de Paranaguá", "Porto de Recife", "Porto de Itaguaí"], answer: "Porto de Santos" },
+{ question: "O que é o pâncreas?", options: ["Glândula digestiva", "Parte do cérebro", "Músculo do tórax", "Parte do coração"], answer: "Glândula digestiva" },
+{ question: "Quem foi o primeiro presidente dos Estados Unidos?", options: ["Thomas Jefferson", "Abraham Lincoln", "George Washington", "Franklin Roosevelt"], answer: "George Washington" },
+{ question: "O que é uma célula?", options: ["Unidade básica da vida", "Partícula invisível", "Bactéria morta", "Músculo do corpo"], answer: "Unidade básica da vida" },
+{ question: "Qual é a capital da Islândia?", options: ["Reykjavik", "Oslo", "Estocolmo", "Copenhague"], answer: "Reykjavik" },
+{ question: "O que é um polígono com cinco lados?", options: ["Quadrado", "Triângulo", "Hexágono", "Pentágono"], answer: "Pentágono" },
+{ question: "Quem escreveu 'O Príncipe'?", options: ["Sun Tzu", "Maquiavel", "Platão", "Sêneca"], answer: "Maquiavel" },
+{ question: "Qual é a maior espécie de tubarão?", options: ["Tubarão-branco", "Tubarão-martelo", "Tubarão-tigre", "Tubarão-baleia"], answer: "Tubarão-baleia" },
+{ question: "O que é um eclipse total do Sol?", options: ["Sol apaga", "Sol explode", "Lua cobre completamente o Sol", "Sol entra em órbita"], answer: "Lua cobre completamente o Sol" },
+{ question: "Qual país venceu a primeira Copa do Mundo?", options: ["Brasil", "Uruguai", "Itália", "Alemanha"], answer: "Uruguai" },
+{ question: "Quem foi o primeiro homem a orbitar a Terra?", options: ["Neil Armstrong", "Yuri Gagarin", "Buzz Aldrin", "Alan Shepard"], answer: "Yuri Gagarin" },
+{ question: "O que é DNA?", options: ["Molécula de proteína", "Ácido nucleico com informações genéticas", "Gás celular", "Hormônio de crescimento"], answer: "Ácido nucleico com informações genéticas" },
+{ question: "O que é um átomo?", options: ["Célula animal", "Molécula de água", "Menor parte de um elemento", "Organela celular"], answer: "Menor parte de um elemento" },
+{ question: "Qual é a capital do Irã?", options: ["Bagdá", "Teerã", "Damasco", "Beirute"], answer: "Teerã" },
+{ question: "Quem é o autor de 'O Pequeno Príncipe'?", options: ["Saint-Exupéry", "J. K. Rowling", "Hans Andersen", "Monteiro Lobato"], answer: "Saint-Exupéry" },
+{ question: "Qual é o nome do maior órgão interno do corpo humano?", options: ["Pulmão", "Coração", "Estômago", "Fígado"], answer: "Fígado" },
+{ question: "Qual é o nome do processo de formação da chuva?", options: ["Decantação", "Condensação", "Sublimação", "Filtração"], answer: "Condensação" },
+{ question: "O que é a Via Láctea?", options: ["Estrela gigante", "Planeta gasoso", "Galáxia onde estamos", "Constelação do Norte"], answer: "Galáxia onde estamos" },
+{ question: "Qual é o coletivo de formigas?", options: ["Matilha", "Colônia", "Enxame", "Ninho"], answer: "Colônia" },
+{ question: "Quem compôs o Hino da Independência do Brasil?", options: ["Carlos Gomes", "Francisco Manuel da Silva", "Dom Pedro I", "Chiquinha Gonzaga"], answer: "Dom Pedro I" },
+{ question: "Qual é a capital do Egito?", options: ["Cairo", "Alexandria", "Cartum", "Trípoli"], answer: "Cairo" },
+{ question: "Qual o símbolo químico do potássio?", options: ["Po", "P", "Pt", "K"], answer: "K" },
+{ question: "Qual é o maior planeta do sistema solar?", options: ["Terra", "Saturno", "Júpiter", "Netuno"], answer: "Júpiter" },
+{ question: "Quem foi Leonardo da Vinci?", options: ["Cientista e artista italiano", "Papa", "Imperador romano", "Rei da França"], answer: "Cientista e artista italiano" },
+{ question: "Qual o coletivo de estrelas?", options: ["Enxame", "Constelação", "Manada", "Alcateia"], answer: "Constelação" },
+{ question: "Qual é o nome da maior floresta temperada do mundo?", options: ["Taiga", "Amazônia", "Floresta de Bambu", "Pantanal"], answer: "Taiga" },
+{ question: "O que é um tsunami?", options: ["Vento forte", "Tornado marítimo", "Maremoto com ondas gigantes", "Tempestade de areia"], answer: "Maremoto com ondas gigantes" },
+{ question: "Quem foi o filósofo que ensinou Platão?", options: ["Aristóteles", "Sêneca", "Sócrates", "Epicuro"], answer: "Sócrates" },
+{ question: "O que é a fotossíntese?", options: ["Processo de digestão das plantas", "Conversão de luz em energia pelas plantas", "Respiração celular", "Sombra da vegetação"], answer: "Conversão de luz em energia pelas plantas" },
+{ question: "Qual é o nome da camada protetora contra raios UV?", options: ["Camada de nitrogênio", "Atmosfera", "Camada de ozônio", "Ionossfera"], answer: "Camada de ozônio" },
+{ question: "Quem escreveu 'Os Sertões'?", options: ["Euclides da Cunha", "Jorge Amado", "Machado de Assis", "José de Alencar"], answer: "Euclides da Cunha" },
+{ question: "Qual país possui mais fusos horários?", options: ["Estados Unidos", "Brasil", "França", "Rússia"], answer: "França" },
+{ question: "Qual é o nome do elemento com símbolo 'Na'?", options: ["Nióbio", "Nitrato", "Sódio", "Neônio"], answer: "Sódio" },
+{ question: "Quem foi o primeiro homem a pisar na Lua?", options: ["Buzz Aldrin", "Neil Armstrong", "Yuri Gagarin", "Alan Shepard"], answer: "Neil Armstrong" },
+{ question: "Qual é o nome da capital da Nova Zelândia?", options: ["Auckland", "Christchurch", "Wellington", "Hamilton"], answer: "Wellington" },
+{ question: "O que significa a sigla IBGE?", options: ["Instituto Brasileiro de Gestão Educacional", "Instituto Brasileiro de Geociência e Estatística", "Instituto Brasileiro de Geografia e Estatística", "Instituto Brasileiro de Garantia Econômica"], answer: "Instituto Brasileiro de Geografia e Estatística" },
+{ question: "Qual é o estado brasileiro com maior população?", options: ["Minas Gerais", "Bahia", "São Paulo", "Rio de Janeiro"], answer: "São Paulo" },
+{ question: "O que é o 'G7'?", options: ["Grupo de países do sul", "Grupo de economias emergentes", "Grupo das 7 maiores economias do mundo", "Grupo de países da Ásia"], answer: "Grupo das 7 maiores economias do mundo" },
+{ question: "O que é um equinócio?", options: ["Quando dia e noite têm a mesma duração", "Quando o dia dura mais que a noite", "Quando ocorre eclipse solar", "Quando o Sol fica no zênite"], answer: "Quando dia e noite têm a mesma duração" },
+{ question: "Qual é o nome da represa que abastece São Paulo?", options: ["Furnas", "Itaipu", "Guarapiranga", "Cantareira"], answer: "Cantareira" },
+{ question: "Quem pintou a obra 'Guernica'?", options: ["Picasso", "Dali", "Van Gogh", "Matisse"], answer: "Picasso" },
+{ question: "Qual é o maior rio inteiramente brasileiro?", options: ["São Francisco", "Paraná", "Tocantins", "Amazonas"], answer: "São Francisco" },
+{ question: "Qual foi o tratado que dividiu as terras entre Portugal e Espanha em 1494?", options: ["Tratado de Utrecht", "Tratado de Paris", "Tratado de Versalhes", "Tratado de Tordesilhas"], answer: "Tratado de Tordesilhas" },
+{ question: "Quantos estados tem o Brasil?", options: ["24", "25", "26", "27"], answer: "26" },
+{ question: "Qual é o nome do animal que representa o símbolo da paz?", options: ["Corvo", "Pomba", "Águia", "Coruja"], answer: "Pomba" },
+{ question: "Quem é considerado o pai da aviação?", options: ["Irmãos Wright", "Leonardo da Vinci", "Alberto Santos Dumont", "Gagarin"], answer: "Alberto Santos Dumont" },
+{ question: "Qual é a língua oficial do Canadá?", options: ["Inglês", "Francês", "Inglês e Francês", "Espanhol"], answer: "Inglês e Francês" },
+{ question: "Qual o oceano entre a África e a Austrália?", options: ["Atlântico", "Pacífico", "Ártico", "Índico"], answer: "Índico" },
+{ question: "Qual a capital do estado de Santa Catarina?", options: ["Joinville", "Blumenau", "Florianópolis", "Chapecó"], answer: "Florianópolis" },
+{ question: "Qual planeta é conhecido como o planeta vermelho?", options: ["Vênus", "Júpiter", "Marte", "Mercúrio"], answer: "Marte" },
+{ question: "Qual a capital da Alemanha?", options: ["Frankfurt", "Hamburgo", "Berlim", "Munique"], answer: "Berlim" },
+{ question: "Qual é a moeda oficial do Reino Unido?", options: ["Euro", "Libra Esterlina", "Dólar", "Franco"], answer: "Libra Esterlina" },
+{ question: "Quem escreveu 'Grande Sertão: Veredas'?", options: ["Machado de Assis", "Graciliano Ramos", "Guimarães Rosa", "José de Alencar"], answer: "Guimarães Rosa" },
+{ question: "Quantos vértices tem um cubo?", options: ["6", "8", "10", "12"], answer: "8" },
+{ question: "Qual é o nome do maior satélite natural de Saturno?", options: ["Titã", "Io", "Ganimedes", "Fobos"], answer: "Titã" },
+{ question: "Quem criou a teoria da evolução por seleção natural?", options: ["Lamarck", "Darwin", "Newton", "Mendel"], answer: "Darwin" },
+{ question: "O que é cartografia?", options: ["Estudo das rochas", "Estudo dos mapas", "Estudo das estrelas", "Estudo de cartas geográficas"], answer: "Estudo dos mapas" },
+{ question: "Qual é a função do intestino delgado?", options: ["Digestão e absorção de nutrientes", "Filtração do sangue", "Produção de bile", "Armazenar água"], answer: "Digestão e absorção de nutrientes" },
+{ question: "Qual país tem a maior reserva de petróleo do mundo?", options: ["Arábia Saudita", "Irã", "Venezuela", "Estados Unidos"], answer: "Venezuela" },
+{ question: "Qual é a capital da Polônia?", options: ["Varsóvia", "Cracóvia", "Praga", "Budapeste"], answer: "Varsóvia" },
+{ question: "Quem pintou 'A Noite Estrelada'?", options: ["Picasso", "Matisse", "Van Gogh", "Monet"], answer: "Van Gogh" },
+{ question: "Quem foi o líder do movimento da independência da Índia?", options: ["Mandela", "Tagore", "Gandhi", "Nehru"], answer: "Gandhi" },
+{ question: "Quantos cromossomos humanos temos normalmente?", options: ["42", "44", "46", "48"], answer: "46" },
+{ question: "Qual o maior país da América do Sul?", options: ["Argentina", "Colômbia", "Peru", "Brasil"], answer: "Brasil" },
+{ question: "Quem é o autor de '1984'?", options: ["George Orwell", "Aldous Huxley", "Ray Bradbury", "J. D. Salinger"], answer: "George Orwell" },
+{ question: "Qual é o nome da ciência que estuda os animais?", options: ["Zoologia", "Ecologia", "Geologia", "Paleontologia"], answer: "Zoologia" },
+{ question: "O que é o ENEM?", options: ["Exame de Medicina", "Prova de concurso", "Exame Nacional do Ensino Médio", "Teste militar"], answer: "Exame Nacional do Ensino Médio" },
+{ question: "Quem foi Tiradentes?", options: ["Rei", "Imperador", "Líder da Inconfidência Mineira", "Presidente"], answer: "Líder da Inconfidência Mineira" },
+{ question: "Qual país tem a maior população do mundo?", options: ["Índia", "Estados Unidos", "China", "Indonésia"], answer: "China" },
+{ question: "O que é um cometa?", options: ["Planeta sem órbita", "Astro com cauda de gás e poeira", "Estrela cadente", "Buraco negro pequeno"], answer: "Astro com cauda de gás e poeira" },
+{ question: "Qual a função da hemoglobina?", options: ["Combater vírus", "Transportar oxigênio", "Produzir hormônios", "Digestão"], answer: "Transportar oxigênio" },
+{ question: "Qual é o menor país do mundo?", options: ["Mônaco", "Malta", "Vaticano", "Liechtenstein"], answer: "Vaticano" },
+{ question: "Qual o nome do ponto mais alto do Brasil?", options: ["Pico da Neblina", "Pico das Agulhas Negras", "Monte Roraima", "Pico do Jaraguá"], answer: "Pico da Neblina" },
+{ question: "Quem é o autor de 'Capitães da Areia'?", options: ["Machado de Assis", "Graciliano Ramos", "Jorge Amado", "Monteiro Lobato"], answer: "Jorge Amado" },
+{ question: "Qual o idioma mais falado no mundo?", options: ["Inglês", "Espanhol", "Chinês mandarim", "Hindi"], answer: "Chinês mandarim" },
+{ question: "Qual a unidade usada para medir força?", options: ["Joule", "Watt", "Newton", "Ohm"], answer: "Newton" },
+{ question: "Qual a capital do Canadá?", options: ["Toronto", "Montreal", "Ottawa", "Vancouver"], answer: "Ottawa" },
+{ question: "Quem inventou o telefone?", options: ["Thomas Edison", "Alexander Graham Bell", "Nikola Tesla", "Einstein"], answer: "Alexander Graham Bell" },
+{ question: "Qual é a camada mais externa da Terra?", options: ["Núcleo", "Manto", "Crosta", "Litosfera"], answer: "Crosta" },
+{ question: "O que é inflação?", options: ["Aumento do PIB", "Alta de preços", "Crescimento da população", "Queda na exportação"], answer: "Alta de preços" },
+{ question: "Qual é a capital da Hungria?", options: ["Varsóvia", "Bucareste", "Budapeste", "Praga"], answer: "Budapeste" },
+{ question: "Quem pintou a obra 'Impressão, nascer do sol'?", options: ["Manet", "Monet", "Degas", "Van Gogh"], answer: "Monet" },
+{ question: "Qual o nome da ciência que estuda os fósseis?", options: ["Ecologia", "Biologia", "Paleontologia", "Geologia"], answer: "Paleontologia" },
+{ question: "Quantas patas tem uma aranha?", options: ["6", "8", "10", "12"], answer: "8" },
+{ question: "Qual a capital da Malásia?", options: ["Hanoi", "Kuala Lumpur", "Jacarta", "Bangcoc"], answer: "Kuala Lumpur" },
+{ question: "Qual é o segundo planeta do sistema solar?", options: ["Mercúrio", "Terra", "Vênus", "Marte"], answer: "Vênus" },
+{ question: "Quem foi o inventor da imprensa?", options: ["Da Vinci", "Galileu", "Gutenberg", "Pascal"], answer: "Gutenberg" },
+{ question: "O que significa 'empatia'?", options: ["Indiferença", "Alegria", "Colocar-se no lugar do outro", "Raiva"], answer: "Colocar-se no lugar do outro" },
+{ question: "Qual animal representa o zodíaco chinês de 2024?", options: ["Coelho", "Dragão", "Cavalo", "Macaco"], answer: "Dragão" },
+{ question: "Quem foi o autor de 'O Alienista'?", options: ["José de Alencar", "Machado de Assis", "Carlos Drummond", "Lima Barreto"], answer: "Machado de Assis" },
+{ question: "Qual o maior oceano do planeta?", options: ["Atlântico", "Índico", "Ártico", "Pacífico"], answer: "Pacífico" },
+{ question: "Qual elemento químico tem símbolo 'Fe'?", options: ["Ferro", "Flúor", "Frâncio", "Fenol"], answer: "Ferro" },
+{ question: "Quem foi Martin Luther King?", options: ["Presidente", "Ativista dos direitos civis", "General", "Músico"], answer: "Ativista dos direitos civis" },
+{ question: "Qual o nome da maior ilha do mundo?", options: ["Austrália", "Groenlândia", "Madagascar", "Islândia"], answer: "Groenlândia" },
+{ question: "O que é um eclipse lunar?", options: ["Lua encobre o Sol", "Terra entre Sol e Lua", "Lua desaparece", "Sol entre Terra e Lua"], answer: "Terra entre Sol e Lua" },
+{ question: "Qual é o nome da maior caverna do mundo?", options: ["Gruta do Maquiné", "Son Doong", "Lapa Doce", "Blue Grotto"], answer: "Son Doong" },
+{ question: "Qual foi o primeiro país da América a conquistar independência?", options: ["Brasil", "Argentina", "Estados Unidos", "Colômbia"], answer: "Estados Unidos" },
+{ question: "Quem compôs o Hino Nacional Brasileiro?", options: ["Carlos Gomes", "Francisco Manuel da Silva", "Heitor Villa-Lobos", "Dom Pedro I"], answer: "Francisco Manuel da Silva" },
+{ question: "Qual é a unidade de temperatura no sistema internacional?", options: ["Celsius", "Fahrenheit", "Kelvin", "Réaumur"], answer: "Kelvin" },
+{ question: "Quem é o autor da série 'Sherlock Holmes'?", options: ["Agatha Christie", "Arthur Conan Doyle", "Dan Brown", "Jules Verne"], answer: "Arthur Conan Doyle" },
+{ question: "Qual o nome do principal rio da África?", options: ["Nilo", "Congo", "Níger", "Zambeze"], answer: "Nilo" },
+{ question: "Qual foi o primeiro animal clonado com sucesso?", options: ["Cachorro", "Gato", "Ovelha Dolly", "Macaco"], answer: "Ovelha Dolly" },
+{ question: "Quantas linhas tem um soneto?", options: ["10", "12", "14", "16"], answer: "14" },
+{ question: "O que é a fotossíntese?", options: ["Absorção de calor", "Digestão vegetal", "Conversão de luz em energia", "Processo de combustão"], answer: "Conversão de luz em energia" },
+{ question: "Qual o coletivo de abelhas?", options: ["Bando", "Alcateia", "Colmeia", "Revoada"], answer: "Colmeia" },
+{ question: "O que significa a sigla NASA?", options: ["Nuclear Agency of Space Affairs", "North American Satellite Association", "National Aeronautics and Space Administration", "National Advanced Satellite Association"], answer: "National Aeronautics and Space Administration" },
+{ question: "Qual é o ponto mais alto do planeta Terra?", options: ["Everest", "K2", "Aconcágua", "Makalu"], answer: "Everest" },
+{ question: "Quem foi o criador da teoria da relatividade?", options: ["Einstein", "Newton", "Planck", "Bohr"], answer: "Einstein" },
+{ question: "Qual o nome da maior cadeia de montanhas do mundo?", options: ["Andes", "Rocosas", "Alpes", "Himalaia"], answer: "Himalaia" },
+{ question: "Qual o país com mais títulos da Copa do Mundo de Futebol?", options: ["Alemanha", "Itália", "Brasil", "Argentina"], answer: "Brasil" },
+{ question: "Quem escreveu 'Auto da Compadecida'?", options: ["Guimarães Rosa", "Ariano Suassuna", "Nelson Rodrigues", "José de Alencar"], answer: "Ariano Suassuna" },
+{ question: "Qual é o maior deserto do mundo?", options: ["Saara", "Gobi", "Atacama", "Antártida"], answer: "Antártida" },
+{ question: "Quantos segundos tem uma hora?", options: ["3.000", "3.600", "6.000", "60.000"], answer: "3.600" },
+{ question: "Qual é o nome do movimento que aboliu a escravidão no Brasil?", options: ["Movimento da Liberdade", "Abolicionismo", "Proclamação da República", "Revolta dos Escravos"], answer: "Abolicionismo" },
+{ question: "Quem foi Confúcio?", options: ["Imperador", "Filósofo chinês", "Deus mitológico", "General romano"], answer: "Filósofo chinês" },
+{ question: "Quantas cores tem a bandeira do Brasil?", options: ["3", "4", "5", "6"], answer: "4" },
+{ question: "Qual o nome do tratado que iniciou a União Europeia?", options: ["Tratado de Roma", "Tratado de Paris", "Tratado de Lisboa", "Tratado de Maastricht"], answer: "Tratado de Maastricht" },
+{ question: "Qual é o símbolo químico do oxigênio?", options: ["O", "Ox", "Og", "O2"], answer: "O" },
+{ question: "Quem é o autor de 'O tempo e o vento'?", options: ["Erico Verissimo", "José de Alencar", "Raul Pompeia", "Monteiro Lobato"], answer: "Erico Verissimo" },
+{ question: "Qual o maior arquipélago do planeta?", options: ["Japão", "Filipinas", "Indonésia", "Bahamas"], answer: "Indonésia" },
+{ question: "Quantos lados tem um heptágono?", options: ["6", "7", "8", "9"], answer: "7" },
+{ question: "Qual foi o primeiro navegador a dar a volta ao mundo?", options: ["Cristóvão Colombo", "Pedro Álvares Cabral", "Fernão de Magalhães", "Vasco da Gama"], answer: "Fernão de Magalhães" },
+{ question: "Qual a função dos glóbulos brancos?", options: ["Transportar oxigênio", "Combater infecções", "Formar coágulos", "Produzir insulina"], answer: "Combater infecções" },
+{ question: "Qual país tem mais vulcões ativos?", options: ["Estados Unidos", "Japão", "Indonésia", "Chile"], answer: "Indonésia" },
+{ question: "Quem escreveu 'Dom Casmurro'?", options: ["Machado de Assis", "José de Alencar", "Manuel Bandeira", "Gregório de Matos"], answer: "Machado de Assis" },
+{ question: "Quantos oceanos existem na Terra?", options: ["3", "4", "5", "6"], answer: "5" },
+{ question: "O que é a litosfera?", options: ["Parte líquida da Terra", "Atmosfera superior", "Camada sólida superficial da Terra", "Centro do planeta"], answer: "Camada sólida superficial da Terra" },
+{ question: "Quem é conhecido como o Rei do Pop?", options: ["Elvis Presley", "Prince", "Freddie Mercury", "Michael Jackson"], answer: "Michael Jackson" }
+
+
+    ];
+
+    let currentQuestion = 0;
+    let score = 0;
+    let shuffledQuestions = [];
+    let playerName = '';
+    let answered = false;
+
+    function shuffle(array) {
+      return array.sort(() => Math.random() - 0.5);
+    }
+
+    function startGame() {
+      const input = document.getElementById('playerName');
+      playerName = input.value.trim();
+      if (!playerName) {
+        alert("Digite seu nome.");
+        return;
+      }
+      shuffledQuestions = shuffle([...questions]);
+      currentQuestion = 0;
+      score = 0;
+      document.getElementById('nextButtonArea').style.display = 'none';
+      saveProgress();
+      updateInfo();
+      showQuestion();
+    }
+
+    function showQuestion() {
+      const q = shuffledQuestions[currentQuestion];
+      document.getElementById('questionText').innerText = q.question;
+      const optionsBox = document.getElementById('optionsBox');
+      optionsBox.innerHTML = '';
+      answered = false;
+      document.getElementById('nextButtonArea').style.display = 'none';
+
+      q.options.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.innerText = opt;
+        btn.onclick = () => handleAnswer(btn, opt === q.answer);
+        optionsBox.appendChild(btn);
+      });
+
+      saveProgress();
+      updateInfo();
+    }
+
+    function handleAnswer(button, correct) {
+      if (answered) return;
+      answered = true;
+      const buttons = document.querySelectorAll('#optionsBox button');
+      buttons.forEach(btn => btn.disabled = true);
+      if (correct) {
+        score++;
+        button.classList.add('correct');
+      } else {
+        button.classList.add('wrong');
+        const correctBtn = [...buttons].find(b => b.innerText === shuffledQuestions[currentQuestion].answer);
+        if (correctBtn) correctBtn.classList.add('correct');
+      }
+      document.getElementById('nextButtonArea').style.display = 'block';
+      updateInfo();
+    }
+
+    function nextQuestion() {
+      currentQuestion++;
+      if (currentQuestion < shuffledQuestions.length) {
+        showQuestion();
+      } else {
+        document.getElementById('questionText').innerText = "Fim do Quiz!";
+        document.getElementById('optionsBox').innerHTML = '';
+        document.getElementById('nextButtonArea').style.display = 'none';
+      }
+    }
+
+    function updateInfo() {
+      document.getElementById('playerInfo').innerText = `Jogador: ${playerName}`;
+      document.getElementById('scoreInfo').innerText = `Acertos: ${score}`;
+      document.getElementById('progressInfo').innerText = `${Math.min(currentQuestion + 1, shuffledQuestions.length)}/${shuffledQuestions.length}`;
+    }
+
+    function pauseGame() {
+      saveProgress();
+      alert("Jogo pausado. Você pode continuar mais tarde.");
+    }
+
+    function resumeGame() {
+      const saved = JSON.parse(localStorage.getItem('quizData'));
+      if (saved) {
+        playerName = saved.name;
+        score = saved.score;
+        currentQuestion = saved.index;
+        shuffledQuestions = saved.questions;
+        updateInfo();
+        showQuestion();
+      } else {
+        alert("Nenhum jogo salvo para continuar.");
+      }
+    }
+
+    function restartGame() {
+      if (confirm("Deseja reiniciar o jogo?")) {
+        localStorage.removeItem('quizData');
+        location.reload();
+      }
+    }
+
+    function saveProgress() {
+      localStorage.setItem('quizData', JSON.stringify({
+        name: playerName,
+        score: score,
+        index: currentQuestion,
+        questions: shuffledQuestions
+      }));
+    }
+  </script>
+</body>
+</html>
