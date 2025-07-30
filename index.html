@@ -717,6 +717,7 @@
       const optionsBox = document.getElementById('optionsBox');
       optionsBox.innerHTML = '';
       answered = false;
+      document.getElementById("contador").innerText = `${currentQuestion + 1} de ${shuffledQuestions.length}`;
       document.getElementById('nextButtonArea').style.display = 'none';
 
       q.options.forEach(opt => {
